@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use TCG\Voyager\Facades\Voyager;
 
-class OverrideRelationController extends \TCG\Voyager\Http\Controllers\VoyagerBaseController
+class TaskController extends \TCG\Voyager\Http\Controllers\VoyagerBaseController
 {
     public function relation(Request $request)
     {
@@ -16,8 +16,39 @@ class OverrideRelationController extends \TCG\Voyager\Http\Controllers\VoyagerBa
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
      //   return $dataType;
         $rows = $request->input('method', 'add') == 'add' ? $dataType->addRows : $dataType->editRows;
+
         foreach ($rows as $key => $row) {
-            if ($row->field === $request->input('type')) {
+            if ($row->field === $request->input('type') && $request->input('type') == 'task_hasone_project_relationship') {
+                $options = $row->details;
+                $skip = $on_page * ($page - 1);
+
+                // If search query, use LIKE to filter results depending on field label
+                if ($search) {
+                    $total_count = app($options->model)->where($options->label, 'LIKE', '%'.$search.'%')->count();
+                    $relationshipOptions = app($options->model)->take($on_page)->skip($skip)
+                        ->where($options->label, 'LIKE', '%'.$search.'%')
+                        ->CurrentUser()->get();
+                } else {
+                    $total_count = app($options->model)->count();
+                    $relationshipOptions = app($options->model)->take($on_page)->skip($skip)->CurrentUser()->get();
+                }
+                //return $options->model;
+                $results = [];
+                foreach ($relationshipOptions as $relationshipOption) {
+                    $results[] = [
+                        'id'   => $relationshipOption->{$options->key},
+                        'text' => $relationshipOption->{$options->label},
+                    ];
+                }
+
+                return response()->json([
+                    'results'    => $results,
+                    'pagination' => [
+                        'more' => ($total_count > ($skip + $on_page)),
+                    ],
+                ]);
+            } 
+            else if ($row->field === $request->input('type')) {
                 $options = $row->details;
                 $skip = $on_page * ($page - 1);
 

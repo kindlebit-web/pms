@@ -56,4 +56,36 @@ class User extends Authenticatable implements UserContract
 
         return $query;
     }
+
+    public function scopeCurrentUserProject($query)
+    {
+        $user = auth()->user();
+
+        if($user->hasRole(UserModel::ADMIN_ROLE) == true || $user->hasRole(UserModel::MANAGER_ROLE) == true) {
+           return $query;
+        }
+
+       if($user->hasRole(UserModel::ADMIN_ROLE) == false || $user->hasRole(UserModel::MANAGER_ROLE) == false) {
+          return $query->where('creator_id', $user->id);
+        }
+
+        return $query;
+    }
+
+     public static function boot()
+     {
+       parent::boot();
+       static::creating(function($model)
+       {
+            $user = auth()->user();
+            if($user->hasRole(UserModel::ADMIN_ROLE) == true || $user->hasRole(UserModel::MANAGER_ROLE) == true) {
+              return;
+            }
+
+            if($user->hasRole(UserModel::ADMIN_ROLE) == false || $user->hasRole(UserModel::MANAGER_ROLE) == false) {
+              $model->creator_id =  $user->id;
+            }
+
+       });
+    }
 }

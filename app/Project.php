@@ -13,6 +13,9 @@ class Project extends Model
 	       static::creating(function($model)
 	       {
 	            $user = auth()->user();
+	            if($user->hasRole(User::ADMIN_ROLE) == true || $user->hasRole(User::MANAGER_ROLE) == true) {
+	             return;
+	            }
 		        if($user->hasRole(User::ADMIN_ROLE) == false || $user->hasRole(User::MANAGER_ROLE) == false) {
 		          $model->creator_id =  $user->id;
 		        }
@@ -24,6 +27,9 @@ class Project extends Model
      {
         $user = auth()->user();
 
+        if($user->hasRole(User::ADMIN_ROLE) == true || $user->hasRole(User::MANAGER_ROLE) == true) {
+          return $query;
+        }
         if($user->hasRole(User::ADMIN_ROLE) == false || $user->hasRole(User::MANAGER_ROLE) == false) {
           return $query->where('creator_id', $user->id);
         }
