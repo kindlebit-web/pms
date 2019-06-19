@@ -10,6 +10,14 @@ class User extends \TCG\Voyager\Models\User
 {
     use Notifiable;
 
+    const ADMIN_ROLE = 'admin';
+    
+    const DEV_ROLE = 'user';
+
+    const LEADER_ROLE = 'team_leader';
+
+    const MANAGER_ROLE = 'manager';
+
     /**
      * The attributes that are mass assignable.
      *
